@@ -126,7 +126,7 @@
 
         async function getCameraStream(deviceId) {
             const constraints = {
-                video: deviceId ? { deviceId: { exact: deviceId } } : true
+                video: deviceId ? { deviceId: { exact: deviceId } } : { facingMode: "environment" }
             };
 
             try {
@@ -144,6 +144,7 @@
                 };
             } catch (error) {
                 console.error('Error accessing camera:', error);
+                alert('Failed to access camera. Ensure camera permissions are granted.');
             }
         }
 
@@ -153,6 +154,11 @@
                 const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
                 cameraSelect.innerHTML = '';
+                if (videoDevices.length === 0) {
+                    alert('No video input devices found.');
+                    return;
+                }
+
                 videoDevices.forEach((device, index) => {
                     const option = document.createElement('option');
                     option.value = device.deviceId;
@@ -160,10 +166,9 @@
                     cameraSelect.appendChild(option);
                 });
 
-                if (videoDevices.length > 0) {
-                    cameraSelect.value = videoDevices[0].deviceId;
-                    getCameraStream(videoDevices[0].deviceId);
-                }
+                // Automatically select the first camera
+                cameraSelect.value = videoDevices[0].deviceId;
+                await getCameraStream(videoDevices[0].deviceId);
             } catch (error) {
                 console.error('Error populating camera options:', error);
             }
@@ -181,22 +186,19 @@
                 const g = data[i + 1];
                 const b = data[i + 2];
 
-                // Simulate temperature range using pixel intensity
                 const intensity = (r + g + b) / 3; // Average of RGB values
+                let temperature = Math.round((intensity / 255) * 100); 
 
-                let temperature = Math.round((intensity / 255) * 100); // Map to 0-100 °C
-
-                // Map temperature to color gradient
                 if (temperature < 25) {
-                    data[i] = 0; // Blue for cold
+                    data[i] = 0; 
                     data[i + 1] = 0;
                     data[i + 2] = 255;
                 } else if (temperature < 50) {
-                    data[i] = 0; // Green for moderate
+                    data[i] = 0; 
                     data[i + 1] = 255;
                     data[i + 2] = 0;
                 } else {
-                    data[i] = 255; // Red for hot
+                    data[i] = 255;
                     data[i + 1] = 0;
                     data[i + 2] = 0;
                 }
